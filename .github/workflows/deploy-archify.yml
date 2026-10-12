@@ -1,0 +1,66 @@
+name: Deploy Archify diagram
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check out Archify v3.0.1
+        uses: actions/checkout@v7
+        with:
+          repository: tt-a1i/archify
+          ref: v3.0.1
+          path: .tools/archify
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Build the interactive diagram
+        env:
+          ARCHIFY_UPDATE_CHECK_DISABLED: "1"
+        run: |
+          mkdir -p site
+          node .tools/archify/archify/bin/archify.mjs deliver workflow \
+            .archify/architecture-text-sanitizer-20261012-214412/candidate.json \
+            site/index.html \
+            --repo-root . \
+            --quality showcase \
+            --json
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
