@@ -1,0 +1,131 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Text Sanitizer Processing Flow",
+    "output": ".archify/architecture-text-sanitizer-20261012-214412/text-sanitizer.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/shaxntanu/Bypassing-AI-detection-on-AI-Generated-Document.git",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "197484cc3e3733e5df22e6b36482e91574dd39dc"
+    }
+  },
+  "lanes": [
+    { "id": "sanitizer", "label": "sanitize_text()" },
+    { "id": "errors", "label": "Validation errors", "variant": "exception" }
+  ],
+  "groups": [
+    {
+      "id": "span_routes",
+      "label": "Handle each span",
+      "lane": "sanitizer",
+      "fromCol": 2,
+      "toCol": 4,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": ["input", "validate", "segment", "clean_prose", "result"],
+  "nodes": [
+    {
+      "id": "input",
+      "lane": "sanitizer",
+      "col": 0,
+      "type": "external",
+      "label": "Text input",
+      "sublabel": "options + rewrites",
+      "sources": [
+        { "path": "text_sanitizer.py", "line": 76, "end_line": 84, "label": "API" }
+      ]
+    },
+    {
+      "id": "validate",
+      "lane": "sanitizer",
+      "col": 1,
+      "type": "backend",
+      "label": "Validate input",
+      "sublabel": "type + valid options",
+      "width": 118,
+      "sources": [
+        { "path": "text_sanitizer.py", "line": 113, "end_line": 137, "label": "Validation" }
+      ]
+    },
+    {
+      "id": "segment",
+      "lane": "sanitizer",
+      "col": 2,
+      "type": "backend",
+      "label": "Split into spans",
+      "sublabel": "Markdown · code · URLs",
+      "width": 145,
+      "sources": [
+        { "path": "text_sanitizer.py", "line": 26, "end_line": 32, "label": "Inline patterns" },
+        { "path": "text_sanitizer.py", "line": 35, "end_line": 72, "label": "Block protection" },
+        { "path": "text_sanitizer.py", "line": 295, "end_line": 307, "label": "Span processing" }
+      ]
+    },
+    {
+      "id": "copy_protected",
+      "lane": "sanitizer",
+      "col": 3,
+      "yOffset": -48,
+      "type": "backend",
+      "label": "Copy unchanged",
+      "sublabel": "code / URL spans",
+      "width": 125,
+      "sources": [
+        { "path": "text_sanitizer.py", "line": 295, "end_line": 298, "label": "Protected blocks" },
+        { "path": "text_sanitizer.py", "line": 302, "end_line": 306, "label": "Inline code and URLs" }
+      ]
+    },
+    {
+      "id": "clean_prose",
+      "lane": "sanitizer",
+      "col": 3,
+      "yOffset": 48,
+      "type": "backend",
+      "label": "Clean prose",
+      "sublabel": "rewrites · Unicode · spacing",
+      "width": 136,
+      "sources": [
+        { "path": "text_sanitizer.py", "line": 142, "end_line": 183, "label": "Aside heuristic" },
+        { "path": "text_sanitizer.py", "line": 185, "end_line": 291, "label": "Prose cleanup" },
+        { "path": "text_sanitizer.py", "line": 302, "end_line": 307, "label": "Clean non-protected text" }
+      ]
+    },
+    {
+      "id": "result",
+      "lane": "sanitizer",
+      "col": 4,
+      "type": "backend",
+      "label": "Return result",
+      "sublabel": "text · counts · review",
+      "width": 120,
+      "sources": [
+        { "path": "text_sanitizer.py", "line": 309, "end_line": 317, "label": "Result" }
+      ]
+    },
+    {
+      "id": "invalid",
+      "lane": "errors",
+      "col": 2,
+      "type": "backend",
+      "label": "Raise exception",
+      "sublabel": "TypeError / ValueError",
+      "width": 140,
+      "sources": [
+        { "path": "text_sanitizer.py", "line": 113, "end_line": 137, "label": "Validation errors" }
+      ]
+    }
+  ],
+  "edges": [
+    { "id": "submit", "from": "input", "to": "validate", "label": "call", "role": "main" },
+    { "id": "valid", "from": "validate", "to": "segment", "label": "valid options", "variant": "emphasis", "role": "main" },
+    { "id": "invalid_input", "from": "validate", "to": "invalid", "label": "invalid input / option", "variant": "security", "role": "error" },
+    { "id": "protected", "from": "segment", "to": "copy_protected", "label": "protected span", "variant": "dashed", "role": "branch" },
+    { "id": "prose", "from": "segment", "to": "clean_prose", "label": "prose span", "variant": "emphasis", "role": "main" },
+    { "id": "copy_result", "from": "copy_protected", "to": "result", "label": "append unchanged", "role": "branch" },
+    { "id": "clean_result", "from": "clean_prose", "to": "result", "label": "append cleaned + audit", "role": "main" }
+  ]
+}
