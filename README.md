@@ -1,5 +1,7 @@
 # Unicode-Aware Text Sanitizer
 
+[![Live Archify diagram](https://img.shields.io/website?url=https%3A%2F%2Fshaxntanu.github.io%2FBypassing-AI-detection-on-AI-Generated-Document%2F&label=live%20diagram)](https://shaxntanu.github.io/Bypassing-AI-detection-on-AI-Generated-Document/)
+
 This repository contains a small, dependency-free Python utility for conservatively cleaning prose. It normalizes selected Unicode and whitespace characters, applies optional exact text replacements, and reports both the changes it made and cases that need human review.
 
 The repository name reflects its original project context. The included code does not identify AI-generated writing, attempt to evade AI detectors, or guarantee grammar or detector outcomes.
